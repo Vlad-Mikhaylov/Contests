@@ -1,6 +1,6 @@
 # My algorithms and data structures collection
 
-* [Matrix and Rational](https://github.com/Vlad-Mikhaylov/Contests/blob/main/3_contest/rational.cpp
+* [Matrix and Rationalc class](https://github.com/Vlad-Mikhaylov/Contests/blob/main/3_contest/rational.cpp &&
   https://github.com/Vlad-Mikhaylov/Contests/blob/main/3_contest/matrix.h)
 * [Data structures]
   + [Heap](https://github.com/Vlad-Mikhaylov/Contests/blob/main/2_contest/E*_Preoritetnaya_Ochered.cpp)
