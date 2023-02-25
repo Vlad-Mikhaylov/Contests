@@ -1,6 +1,7 @@
 # My algorithms and data structures collection
 
-* [BigInteger and Big Rational](https://github.com/VladislavHacker/Algorithms/blob/master/BigInteger/BigInt.cpp)
+* [Matrix and Rational](https://github.com/Vlad-Mikhaylov/Contests/blob/main/3_contest/rational.cpp
+  https://github.com/Vlad-Mikhaylov/Contests/blob/main/3_contest/matrix.h)
 * [Data structures]
   + [Heap](https://github.com/Vlad-Mikhaylov/Contests/blob/main/2_contest/E*_Preoritetnaya_Ochered.cpp)
   + [Stack](https://github.com/Vlad-Mikhaylov/Contests/blob/main/2_contest/G_Kartochnaya_igra.cpp)
