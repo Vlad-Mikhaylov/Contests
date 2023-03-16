@@ -11,6 +11,11 @@ struct Point {
   Point(int64_t x, int64_t y) : x_(x), y_(y) {
   }
 };
+std::istream& operator>>(std::istream& is, Point& tmp) {
+  is >> tmp.x_;
+  is >> tmp.y_;
+  return is;
+}
 class Vector {
  public:
   int64_t x_;
@@ -62,30 +67,44 @@ class Segment {
     this->b_ = b;
   }
 };
-bool BeLine(Point p, Line l) {
-  return (l.a_ * p.x_ + l.b_ * p.y_ + l.c_ == 0);
+bool CheckConvexPoligon(const std::vector<Point>& vertices) {
+  Vector tmp(vertices.back(), vertices.front());
+  size_t i = 0;
+  while (tmp.VectorProduct(Vector(vertices[i], vertices[i + 1])) == 0) {
+    tmp = Vector(vertices[i], vertices[i + 1]);
+    i++;
+  }
+  int64_t checker = tmp.VectorProduct(Vector(vertices[i], vertices[i + 1])) /
+                    std::abs(tmp.VectorProduct(Vector(vertices[i], vertices[i + 1])));
+  tmp = Vector(vertices[0], vertices[1]);
+  for (size_t i = 1; i < vertices.size() - 1; i++) {
+    if (tmp.VectorProduct(Vector(vertices[i], vertices[i + 1])) * checker < 0) {
+      return false;
+    }
+    tmp = Vector(vertices[i], vertices[i + 1]);
+  }
+  return true;
 }
-bool BeRay(Point p, Ray r) {
-  Vector op(r.p_, p);
-  return ((r.v_.DotProduct(op) >= 0) && (r.v_.VectorProduct(op) == 0));
-}
-bool BeSegment(Point p, Segment s) {
-  Vector r_1(s.a_, p);
-  Vector r_2(p, s.b_);
-  return ((r_1.VectorProduct(r_2) == 0) && (r_1.DotProduct(r_2) >= 0));
+int64_t Area(const std::vector<Point>& vertices) {
+  int64_t area = 0;
+  Point null(0, 0);
+  for (int i = 0; i < vertices.end() - vertices.begin() - 1; i++) {
+    area += Vector(null, vertices[i]).VectorProduct(Vector(null, vertices[i + 1]));
+  }
+  area += Vector(null, vertices.back()).VectorProduct(Vector(null, vertices[0]));
+  return area;
 }
 }  // namespace geometry
 
 int main() {
-  geometry::Point a;
-  geometry::Point b;
-  geometry::Point c;
-  std::cin >> a.x_ >> a.y_ >> b.x_ >> b.y_ >> c.x_ >> c.y_;
-  geometry::Line l(b, c);
-  geometry::Ray r(b, c);
-  geometry::Segment s(b, c);
-  geometry::BeLine(a, l) ? std::cout << "YES" << '\n' : std::cout << "NO" << '\n';
-  geometry::BeRay(a, r) ? std::cout << "YES" << '\n' : std::cout << "NO" << '\n';
-  geometry::BeSegment(a, s) ? std::cout << "YES" << '\n' : std::cout << "NO" << '\n';
+  int n;
+  auto vertices = std::vector<geometry::Point>();
+  std::cin >> n;
+  geometry::Point tmp;
+  for (int i = 0; i < n; i++) {
+    std::cin >> tmp;
+    vertices.emplace_back(tmp);
+  }
+  geometry::CheckConvexPoligon(vertices) ? std::cout << "YES" : std::cout << "NO";
   return 0;
 }

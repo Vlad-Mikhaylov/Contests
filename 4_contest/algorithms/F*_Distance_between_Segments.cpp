@@ -1,7 +1,8 @@
 #include <iostream>
 #include <cmath>
 #include <iomanip>
-#include <vector>
+#include <limits>
+#include <algorithm>
 namespace geometry {
 struct Point {
   int64_t x_;
@@ -91,18 +92,55 @@ float DistanceRay(Point p, Ray r) {
   Vector op(r.p_, p);
   return (r.v_.DotProduct(op) > 0 ? std::abs((float(r.v_.VectorProduct(op)) / float(r.v_.Module()))) : op.Module());
 }
+Point SetPoint(Line l_2, Line l_1) {
+  float delta = l_1.a_ * l_2.b_ - l_1.b_ * l_2.a_;
+  float delta_2 = l_1.a_ * l_2.c_ - l_1.c_ * l_2.a_;
+  float delta_1 = l_1.c_ * l_2.b_ - l_1.b_ * l_2.c_;
+  Point sol((-delta_1 / delta), (-delta_2 / delta));
+  return sol;
+}
+Point Normalize(Point p, Segment s) {
+  Line l(s.a_, s.b_);
+  Line k(p, Point(p.x_ + l.a_, p.y_ + l.b_));
+  return SetPoint(l, k);
+}
+bool IsSegCrossing(const Segment& first, const Segment& second) {
+  return ((Vector(first.a_, first.b_).VectorProduct(Vector(first.a_, second.a_)) *
+               Vector(first.a_, first.b_).VectorProduct(Vector(first.a_, second.b_)) <
+           0) &&
+          (Vector(second.a_, second.b_).VectorProduct(Vector(second.a_, first.a_)) *
+               Vector(second.a_, second.b_).VectorProduct(Vector(second.a_, first.b_)) <
+           0)) ||
+         (BeSegment(first.a_, second) || BeSegment(first.b_, second) ||
+          (BeSegment(second.a_, first) || BeSegment(second.b_, first)));
+}
+float CountDistance(Point p, Segment s) {
+  return std::min(Vector(p, s.a_).Module(), Vector(p, s.b_).Module());
+}
+float DirectDistance(Segment first, Segment second) {
+  return std::min(CountDistance(first.a_, second), CountDistance(first.b_, second));
+}
+float VariableDistances(Segment first, Segment second) {
+  if (!IsSegCrossing(first, second)) {
+    float lengths = std::numeric_limits<float>::max();
+    lengths = std::min(lengths, DistanceSegment(first.a_, second));
+    lengths = std::min(lengths, DistanceSegment(first.b_, second));
+    lengths = std::min(lengths, DistanceSegment(second.a_, first));
+    lengths = std::min(lengths, DistanceSegment(second.b_, first));
+    return lengths;
+  }
+  return 0;
+}
 }  // namespace geometry
 
 int main() {
   geometry::Point a;
   geometry::Point b;
   geometry::Point c;
-  std::cin >> a.x_ >> a.y_ >> b.x_ >> b.y_ >> c.x_ >> c.y_;
-  geometry::Line l(b, c);
-  geometry::Ray r(b, c);
-  geometry::Segment s(b, c);
-  std::cout << std::fixed << std::setprecision(6) << geometry::DistanceLine(a, l) << '\n';
-  std::cout << std::fixed << std::setprecision(6) << geometry::DistanceRay(a, r) << '\n';
-  std::cout << std::fixed << std::setprecision(6) << geometry::DistanceSegment(a, s) << '\n';
+  geometry::Point d;
+  std::cin >> a.x_ >> a.y_ >> b.x_ >> b.y_ >> c.x_ >> c.y_ >> d.x_ >> d.y_;
+  geometry::Segment s(a, b);
+  geometry::Segment r(c, d);
+  std::cout << std::fixed << std::setprecision(6) << VariableDistances(s, r);
   return 0;
 }

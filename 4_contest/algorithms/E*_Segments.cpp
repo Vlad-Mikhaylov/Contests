@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cmath>
 #include <iomanip>
-#include <vector>
 namespace geometry {
 struct Point {
   int64_t x_;
@@ -38,10 +37,10 @@ class Vector {
 };
 class Line {
  public:
-  Vector v;
   int a_, b_, c_;
   Point m;
-  Line(const Point& a, const Point& b) : v(Vector(a, b)), a_(v.y_), b_(-v.x_), c_(a.y_ * v.x_ - a.x_ * v.y_), m(a) {
+  Vector v;
+  Line(const Point& a, const Point& b) : a_(v.y_), b_(-v.x_), c_(a.y_ * v.x_ - a.x_ * v.y_), m(a), v(Vector(a, b)) {
   }
 };
 class Ray {
@@ -62,17 +61,20 @@ class Segment {
     this->b_ = b;
   }
 };
-bool BeLine(Point p, Line l) {
-  return (l.a_ * p.x_ + l.b_ * p.y_ + l.c_ == 0);
-}
-bool BeRay(Point p, Ray r) {
-  Vector op(r.p_, p);
-  return ((r.v_.DotProduct(op) >= 0) && (r.v_.VectorProduct(op) == 0));
-}
 bool BeSegment(Point p, Segment s) {
   Vector r_1(s.a_, p);
   Vector r_2(p, s.b_);
   return ((r_1.VectorProduct(r_2) == 0) && (r_1.DotProduct(r_2) >= 0));
+}
+bool IsSegCrossing(const Segment& first, const Segment& second) {
+  return ((Vector(first.a_, first.b_).VectorProduct(Vector(first.a_, second.a_)) *
+               Vector(first.a_, first.b_).VectorProduct(Vector(first.a_, second.b_)) <
+           0) &&
+          (Vector(second.a_, second.b_).VectorProduct(Vector(second.a_, first.a_)) *
+               Vector(second.a_, second.b_).VectorProduct(Vector(second.a_, first.b_)) <
+           0)) ||
+         (BeSegment(first.a_, second) || BeSegment(first.b_, second) ||
+          (BeSegment(second.a_, first) || BeSegment(second.b_, first)));
 }
 }  // namespace geometry
 
@@ -80,12 +82,10 @@ int main() {
   geometry::Point a;
   geometry::Point b;
   geometry::Point c;
-  std::cin >> a.x_ >> a.y_ >> b.x_ >> b.y_ >> c.x_ >> c.y_;
-  geometry::Line l(b, c);
-  geometry::Ray r(b, c);
-  geometry::Segment s(b, c);
-  geometry::BeLine(a, l) ? std::cout << "YES" << '\n' : std::cout << "NO" << '\n';
-  geometry::BeRay(a, r) ? std::cout << "YES" << '\n' : std::cout << "NO" << '\n';
-  geometry::BeSegment(a, s) ? std::cout << "YES" << '\n' : std::cout << "NO" << '\n';
+  geometry::Point d;
+  std::cin >> a.x_ >> a.y_ >> b.x_ >> b.y_ >> c.x_ >> c.y_ >> d.x_ >> d.y_;
+  geometry::Segment s(a, b);
+  geometry::Segment r(c, d);
+  geometry::IsSegCrossing(s, r) ? std::cout << "YES" : std::cout << "NO";
   return 0;
 }

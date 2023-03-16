@@ -1,11 +1,16 @@
-#ifndef SHARED_PTR_H
-#define SHARED_PTR_H
-#include <stdexcept>
-class BadWeakPtr : public std::runtime_error {
+#ifndef SHAREDPTR_SHAREDPTR_H
+#define SHAREDPTR_SHAREDPTR_H
+#define MAKE_SHARED_IMPLEMENTED
+#include <iostream>
+
+class BadWeakPtr : public std::runtime_error {  // NOLINT
  public:
   BadWeakPtr() : std::runtime_error("BadWeakPtr") {
   }
 };
+
+template <typename T>
+class WeakPtr;
 
 template <class T>
 class SharedPtr {
@@ -140,4 +145,89 @@ class SharedPtr {
     return this->ptr_ != nullptr ? true : false;
   }
 };
+template <typename T>
+class WeakPtr {
+  friend class SharedPtr<T>;
+  using Counter = typename SharedPtr<T>::Counter;
+  Counter* counter_ = nullptr;
+  T* ptr_ = nullptr;
+  void Delete() {
+    if (!counter_) {
+      return;
+    }
+    --(counter_->weak_count);
+    if (counter_->weak_count <= 0 && counter_->shared_count <= 0) {
+      delete counter_;
+    }
+    counter_ = nullptr;
+  }
+
+ public:
+  WeakPtr() = default;
+  WeakPtr(WeakPtr<T>& other) : counter_(other.counter_), ptr_(other.ptr_) {  // NOLINT
+    if (counter_) {
+      counter_->weak_count++;
+    }
+  }
+  WeakPtr<T>& operator=(const WeakPtr<T>& other) {
+    Delete();
+    ptr_ = other.ptr_;
+    counter_ = other.counter_;
+    counter_->weak_count++;
+    return *this;
+  }
+  WeakPtr(WeakPtr<T>&& other) : counter_(other.counter_), ptr_(other.ptr_) {
+    other.counter_ = nullptr;
+    other.ptr_ = nullptr;
+  }
+  WeakPtr<T>& operator=(WeakPtr<T>&& other) {
+    Delete();
+    counter_ = other.counter_;
+    ptr_ = other.ptr_;
+    other.counter_ = nullptr;
+    other.ptr_ = nullptr;
+    return *this;
+  }
+  WeakPtr(const SharedPtr<T>& other) : counter_(other.counter_), ptr_(other.ptr_) {  // NOLINT
+    if (counter_) {
+      counter_->weak_count++;
+    }
+  }
+  ~WeakPtr() {
+    Delete();
+  }
+  T* Get() const {
+    return ptr_;
+  }
+  void Swap(WeakPtr<T>& other) {
+    auto tmp = std::move(other);
+    other = std::move(*this);
+    *this = std::move(tmp);
+  }
+  void Reset() {
+    Delete();
+  }
+  int UseCount() const {
+    if (!counter_) {
+      return 0;
+    }
+    return counter_->shared_count;
+  }
+  bool Expired() const {
+    return UseCount() <= 0;
+  }
+  SharedPtr<T> Lock() {
+    if (!Expired()) {
+      SharedPtr<T> ans(*this);
+      return ans;
+    }
+    return SharedPtr<T>();
+  }
+};
+
+template <typename T, typename... Args>
+SharedPtr<T> MakeShared(Args&&... args) {
+  return SharedPtr(new T(std::forward<Args>(args)...));
+}
+
 #endif
